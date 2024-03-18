@@ -31,11 +31,7 @@ function init() {
     .pipeTo(writableStream!)
 }
 
-onMounted(() => {
-  init()
-
-  console.log(readableChunkRef.value?.getBoundingClientRect())
-})
+onMounted(init)
 </script>
 
 <template>
