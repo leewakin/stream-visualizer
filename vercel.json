@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/stream-visualizer/(.*)",
+      "destination": "/$1"
+    }
+  ]
+}
