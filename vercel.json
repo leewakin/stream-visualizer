@@ -1,8 +1,11 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     {
       "source": "/stream-visualizer/(.*)",
       "destination": "/$1"
     }
-  ]
+  ],
+  "buildCommand": "pnpm build",
+  "installCommand": "pnpm i"
 }
