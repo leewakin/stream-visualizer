@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import Card from './Card.vue'
-import Item from './Item.vue'
 import ButtonReturn from './ButtonReturn.vue'
 import { strategy } from '../utils'
 import Statement from './Statement.vue'
+import { useLog } from '../data'
 
 type StreamMethod = 'start' | 'pull' | 'cancel'
 
@@ -13,6 +13,8 @@ const activeMethodStatus = ref<Record<StreamMethod, boolean>>({
   pull: false,
   cancel: false
 })
+
+const { push: pushLog } = useLog()
 
 const size = ref('1')
 const errorNotification = ref<string>()
@@ -41,9 +43,12 @@ function start(controller: ReadableStreamDefaultController<string>) {
   updateMethodStatus('start', true)
   streamController.value = controller
 
+  pushLog('[ReadableStream] start() called')
+
   return startPromise.value.promise.then(() => {
     updateMethodStatus('start', false)
-    console.log('[ReadableStream] start() finished')
+
+    pushLog('[ReadableStream] start() finished')
   })
 }
 
@@ -51,10 +56,13 @@ function pull() {
   updateMethodStatus('pull', true)
   pullPromise.value = Promise.withResolvers()
 
+  pushLog('[ReadableStream] pull() called')
+
   return pullPromise.value.promise.then(() => {
     updateMethodStatus('pull', false)
     pullPromise.value = null
-    console.log('[ReadableStream] pull() finished')
+
+    pushLog('[ReadableStream] pull() finished')
   })
 }
 
@@ -62,9 +70,12 @@ function cancel(reason: any) {
   updateMethodStatus('cancel', true)
   cancelCalledPromise.value.resolve(reason)
 
+  pushLog('[ReadableStream] cancel() called, reason: ' + reason)
+
   return cancelReturnedPromise.value.promise.then(() => {
     updateMethodStatus('cancel', false)
-    console.log('[ReadableStream] cancel() finished')
+
+    pushLog('[ReadableStream] cancel() finished')
   })
 }
 
@@ -75,11 +86,15 @@ function updateMethodStatus(method: StreamMethod, isActive: boolean) {
 function closeStream() {
   streamController.value?.close()
   errorNotification.value = '[ReadableStream] closed'
+
+  pushLog('[ReadableStream] close() called')
 }
 
 function triggerError() {
   streamController.value?.error('error from ReadableStream')
   errorNotification.value = '[ReadableStream] error'
+
+  pushLog('[ReadableStream] error() called')
 }
 
 const desiredSize = ref<number | null | undefined>(10)
@@ -87,6 +102,8 @@ function enqueue(size: string) {
   streamController.value?.enqueue(size)
 
   desiredSize.value = streamController.value?.desiredSize
+
+  pushLog(`[ReadableStream] enqueue(${size})`)
 }
 
 defineExpose({
@@ -95,60 +112,58 @@ defineExpose({
 </script>
 
 <template>
-  <Item>
-    <Card>
-      <template #code>
-        new ReadableStream({
-        <Statement :active="activeMethodStatus.start">
-          start() {
-          <ButtonReturn
-            :disabled="!activeMethodStatus.start"
-            @click="startPromise.resolve(undefined)"
-          />
-          },
-        </Statement>
+  <Card>
+    <template #code>
+      new ReadableStream({
+      <Statement :active="activeMethodStatus.start">
+        start() {
+        <ButtonReturn
+          :disabled="!activeMethodStatus.start"
+          @click="startPromise.resolve(undefined)"
+        />
+        },
+      </Statement>
 
-        <Statement :active="activeMethodStatus.pull">
-          pull() {
-          <ButtonReturn
-            :disabled="!activeMethodStatus.pull"
-            @click="pullPromise?.resolve(undefined)"
-          />
-          },
-        </Statement>
+      <Statement :active="activeMethodStatus.pull">
+        pull() {
+        <ButtonReturn
+          :disabled="!activeMethodStatus.pull"
+          @click="pullPromise?.resolve(undefined)"
+        />
+        },
+      </Statement>
 
-        <Statement :active="activeMethodStatus.cancel">
-          cancel() {
-          <ButtonReturn
-            :disabled="!activeMethodStatus.cancel"
-            @click="cancelReturnedPromise?.resolve(undefined)"
-          />
-          },
-        </Statement>
+      <Statement :active="activeMethodStatus.cancel">
+        cancel() {
+        <ButtonReturn
+          :disabled="!activeMethodStatus.cancel"
+          @click="cancelReturnedPromise?.resolve(undefined)"
+        />
+        },
+      </Statement>
 
-        }, {
-        <div class="pl-4">highWaterMark: {{ strategy.highWaterMark }},</div>
-        })
-      </template>
-      <template #controll>
-        <div class="flex flex-col gap-y-2">
-          <div>
-            <div>desiredSize = {{ desiredSize }}</div>
-          </div>
-          <div class="flex items-center gap-x-2">
-            <button @click="enqueue(size)">enqueue()</button>
-            <div class="text-nowrap">with size:</div>
-            <input v-model="size" type="number" class="w-full" />
-          </div>
-          <div class="flex items-center gap-x-2">
-            <button @click="closeStream">close()</button>
-            <button @click="triggerError">error()</button>
-          </div>
-          <p v-if="errorNotification" class="text-red-400">
-            {{ errorNotification }}
-          </p>
+      }, {
+      <div class="pl-4">highWaterMark: {{ strategy.highWaterMark }},</div>
+      })
+    </template>
+    <template #controll>
+      <div class="flex flex-col gap-y-2">
+        <div>
+          <div>desiredSize = {{ desiredSize }}</div>
         </div>
-      </template>
-    </Card>
-  </Item>
+        <div class="flex items-center gap-x-2">
+          <button @click="enqueue(size)">enqueue()</button>
+          <div class="text-nowrap">with size:</div>
+          <input v-model="size" type="number" class="w-full" />
+        </div>
+        <div class="flex items-center gap-x-2">
+          <button @click="closeStream">close()</button>
+          <button @click="triggerError">error()</button>
+        </div>
+        <p v-if="errorNotification" class="text-red-400">
+          {{ errorNotification }}
+        </p>
+      </div>
+    </template>
+  </Card>
 </template>

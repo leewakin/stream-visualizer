@@ -6,7 +6,7 @@ defineProps<{
 
 <template>
   <button
-    :disabled="disabled"
+    :disabled
     class="inline-flex items-center gap-1 px-2 align-middle disabled:cursor-not-allowed disabled:opacity-60"
   >
     <!-- v-if="disabled" -->

@@ -1,5 +1,3 @@
-<script setup lang="ts"></script>
-
 <template>
   <div
     class="grid flex-1 grid-cols-2 gap-4 rounded-md border border-black bg-green-200 p-2"

@@ -41,3 +41,7 @@ button {
 .method.active {
   @apply bg-yellow-200;
 }
+
+.chunk {
+  @apply fixed flex h-8 w-8 items-center justify-center rounded-full bg-sky-400;
+}
